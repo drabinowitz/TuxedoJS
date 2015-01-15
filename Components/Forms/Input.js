@@ -2,7 +2,20 @@
 
 var React = require('tux/React');
 
-var Input = React.createOwneeClass({
+var Input = React.createMutableClass({
+
+  __tuxFormInput__: true,
+
+  mutableTraits: {
+    props: 'isValid',
+    state: 'message'
+  },
+
+  getDefaultProps: function () {
+    return {
+      isValid: true
+    };
+  },
 
   propTypes: {
     name: React.PropTypes.string.isRequired,
@@ -14,15 +27,16 @@ var Input = React.createOwneeClass({
     maxValue: React.PropTypes.number,
     required: React.PropTypes.bool,
     pattern: React.PropTypes.instanceOf(window.Regexp),
-    customCheck: React.PropTypes.func,
+    customCheck: React.PropTypes.func
+  },
+
+  nearestOwnerPropTypes: {
     __tuxHandleIsValidCheck__: React.PropTypes.func.isRequired
   },
 
   getInitialState: function () {
     return {
-      message: this.props.defaultValue || '',
-      isValid: true,
-      isPristine: true
+      message: this.props.defaultValue || ''
     };
   },
 
@@ -34,7 +48,7 @@ var Input = React.createOwneeClass({
     var required = this.props.required;
     var pattern = this.props.pattern;
     var customCheck = this.props.customCheck;
-
+    //TODO CHANGE TO RETURN ACTUAL ERRORS
     if (minLength !== undefined && minLength > message.length) {
       return false;
     }
@@ -69,20 +83,7 @@ var Input = React.createOwneeClass({
   handleChange: function (event) {
     var newMessage = event.target.value.toString();
     var isValid = this.checkIfValid(newMessage);
-    this.setState({
-      isPristine: false,
-      message: newMessage,
-      isValid: isValid
-    });
-    this.props.__tuxHandleIsValidCheck__(isValid);
-  },
-
-  setToPristine: function () {
-    this.setState({isPristine: true});
-  },
-
-  setToDirty: function () {
-    this.setState({isPristine: false});
+    this.nearestOwnerProps.__tuxHandleIsValidCheck__(this.props.name, isValid);
   },
 
   render: function () {
