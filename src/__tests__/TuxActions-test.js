@@ -176,7 +176,49 @@ describe('TuxActions', function () {
           expect(dispatchSetAction).not.toBeCalled();
         });
 
-        it('should throw an error if the actionVerb string or one of the strings in the actionVerb array does not match an action in category', function () {
+        it('should accept an object map of action verbs to callbacks and should add each callback to its corresponding key', function () {
+          //store a reference to the current get and set actions
+          var dispatchGetAction = tuxActionCategory.get = jest.genMockFunction();
+          var dispatchSetAction = tuxActionCategory.set = jest.genMockFunction();
+
+          var mockBeforeGetAction = jest.genMockFunction();
+          var mockBeforeSetAction = jest.genMockFunction();
+
+          tuxActionCategory.before({
+            get: mockBeforeGetAction,
+            set: mockBeforeSetAction
+          });
+
+          //dispatch a get action with a mockActionBody
+          var mockActionBody = {};
+          tuxActionCategory.get(mockActionBody);
+
+          //expect the mockBeforeGetAction to have been called with the dispatchGetAction callback and mockActionBody
+          expect(mockBeforeGetAction.mock.calls[0][0]).toBe(dispatchGetAction);
+          expect(mockBeforeGetAction.mock.calls[0][1]).toBe(mockActionBody);
+
+          //expect the dispatchGetAction not to have been called
+          expect(dispatchGetAction).not.toBeCalled();
+
+          //expect the mockBeforeSetAction not to have been called
+          expect(mockBeforeSetAction).not.toBeCalled();
+
+          //dispatch a set action with a mockActionBody
+          mockActionBody = {};
+          tuxActionCategory.set(mockActionBody);
+
+          //expect the mockBeforeSetAction to have been called with the dispatchSetAction callback and mockActionBody
+          expect(mockBeforeSetAction.mock.calls[0][0]).toBe(dispatchSetAction);
+          expect(mockBeforeSetAction.mock.calls[0][1]).toBe(mockActionBody);
+
+          //expect the dispatchSetAction not to have been called
+          expect(dispatchSetAction).not.toBeCalled();
+
+          //expect the mockBeforeGetAction not to have been called again
+          expect(mockBeforeGetAction.mock.calls.length).toBe(1);
+        });
+
+        it('should throw an error if the actionVerb string, one of the strings in the actionVerb array, or one of the keys in the actionVerb object does not match an action in category', function () {
           expect(function () {
             tuxActionCategory.before('not an action', function () {});
           }).toThrow(new Error('Invariant Violation: could not find action: "not an action" within category: "tests" when attempting to register the before callback'));
@@ -184,6 +226,13 @@ describe('TuxActions', function () {
           expect(function () {
             tuxActionCategory.before(['get', 'not an action'], function () {});
           }).toThrow(new Error('Invariant Violation: could not find action: "not an action" within category: "tests" when attempting to register the before callback'));
+
+          expect(function () {
+            tuxActionCategory.before({
+              get: function () {},
+              doesntExist: function () {}
+            });
+          }).toThrow(new Error('Invariant Violation: could not find action: "doesntExist" within category: "tests" when attempting to register the before callback'));
         });
       });
     });

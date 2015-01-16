@@ -130,16 +130,24 @@ var ActionCategory = function (props) {
 };
 
 //ActionCategory.before FUNCTION: replaces the current method at the passed in actionVerb with the callbackToInvokeBeforeDispatch and binds the previous actionVerb method to the first input of the callbackToInvokeBeforeDispatch
-//@param actionVerb STRING: action verb to replace with callbackToInvokeBeforeDispatch, callbackToInvokeBeforeDispatch will be invoked before dispatching or before the previous 'before' callback on this action verb [ALTERNATE ARRAY: array of string action verbs to add callback onto, callback will be invoked before dispatching or before the previous 'before' callback on each action verb in the array]
+//@param actionVerb STRING: action verb to replace with callbackToInvokeBeforeDispatch, callbackToInvokeBeforeDispatch will be invoked before dispatching or before the previous 'before' callback on this action verb [ALTERNATE ARRAY: array of string action verbs to add callback onto, callback will be invoked before dispatching or before the previous 'before' callback on each action verb in the array] [ALTERNATE OBJECT: map of callbacks to action verbs.  Each key should be an action verb and each value should be the callback to invoke before the action at that key]
 //@param callbackToInvokeBeforeDispatch FUNCTION: callback to invoke before dispatching the action. Callback will receive two inputs:
   //1st input FUNCTION: the next callback to invoke in the callback chain. Pass an object into the function to invoke it with an actionBody
   //2nd input OBJECT: the actionBody. This will either be from the first invocation of the action or from the previous callback in the chain
 ActionCategory.prototype.before = function (actionVerb, callbackToInvokeBeforeDispatch) {
-  //if the actionverb is an array than invoke the before method with each element in the array and the callbackToInvokeBeforeDispatch
+  //if the actionVerb is an array than invoke the before method with each element in the array and the callbackToInvokeBeforeDispatch
   if (Array.isArray(actionVerb)) {
     var actionVerbLength = actionVerb.length;
     for (var i = 0; i < actionVerbLength; i++) {
       this.before(actionVerb[i], callbackToInvokeBeforeDispatch);
+    }
+  //if the actionVerb is an object then invoke before method for each key passing in the key and as the actionVerb and the value at that key as the callback
+  } else if (typeof actionVerb === 'object' && actionVerb !== null) {
+    var action;
+    for (action in actionVerb) {
+      if (actionVerb.hasOwnProperty(action)) {
+        this.before(action, actionVerb[action]);
+      }
     }
   } else {
     //if the actionVerb does not correspond to any action in this category throw an error
