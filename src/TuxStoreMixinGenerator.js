@@ -47,11 +47,11 @@ var TuxStoreMixinGenerator = function (props) {
 //@param storeConfig OBJECT: contains the store object that the event types and the listener callbacks will be attached to
   //expected keys:
   // store OBJECT: store object that the event and listener should be attached to
-  // listener FUNCTION: callback function to be invoked upon associated event [ALTERNATE ARRAY: array of callback functions]
+  // listener FUNCTION: callback function to be invoked upon associated event [ALTERNATE ARRAY: array of callback functions] [ALTERNATE OBJECT: map of event strings to callback functions]
   // event STRING: event type to trigger listener callback function [ALTERNATE ARRAY: array of event type strings]
 //@param addRemoveListener BOOLEAN: true to addChangeListener, false to removeChangeListener
 var mapListenersAndEventsToStore = function (storeConfig, addOrRemoveListener) {
-  addOrRemoveListener = addOrRemoveListener ? 'addChangeListener' : 'removeChangeListener';
+  var addOrRemoveListenerString = addOrRemoveListener ? 'addChangeListener' : 'removeChangeListener';
 
   // get store object
   var store = storeConfig.store;
@@ -64,8 +64,22 @@ var mapListenersAndEventsToStore = function (storeConfig, addOrRemoveListener) {
   //determine if event is an array of change event types, if it isn't it will be converted to a single element array for ease of looping if listener is an array
   var eventIsArray = Array.isArray(event);
 
+  //if the listener is an object and not an array
+  if (typeof(listener) === 'object' && !listenerIsArray) {
+    //loop through keys in listener
+    var eventKey;
+    for (eventKey in listener) {
+      if (listener.hasOwnProperty(eventKey)) {
+        //invoke mapListenersAndEventsToStore with a new object possessing the same store, the eventKey as the event, and the value at this key as the listener
+        mapListenersAndEventsToStore({
+          store: store,
+          event: eventKey,
+          listener: listener[eventKey]
+        }, addOrRemoveListener);
+      }
+    }
   // check to see if either listener or event is an array and if one is the other will be changed to an array
-  if (listenerIsArray || eventIsArray) {
+  } else if (listenerIsArray || eventIsArray) {
     if (!listenerIsArray) {
       listener = [listener];
     } else if (!eventIsArray) {
@@ -86,11 +100,11 @@ var mapListenersAndEventsToStore = function (storeConfig, addOrRemoveListener) {
     for (var i = 0; i < longerLength; i++) {
       var currentListener = listener[i] || listener[listenerLength - 1];
       var currentEvent = event[i] || event[eventLength - 1];
-      store[addOrRemoveListener](currentListener, currentEvent);
+      store[addOrRemoveListenerString](currentListener, currentEvent);
     }
   } else {
     // if neither the listener or event was an array, the add or remove change listener can be invoked without converting them to arrays
-    store[addOrRemoveListener](listener, event);
+    store[addOrRemoveListenerString](listener, event);
   }
 };
 

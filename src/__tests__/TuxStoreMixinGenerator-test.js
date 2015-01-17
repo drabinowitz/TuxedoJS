@@ -388,4 +388,59 @@ describe('TuxStoreMixinGenerator', function () {
       expect(mockStore2.removeChangeListener.mock.calls[1][1]).toBe(mockConnectComposerToStoreReturn2.event[1]);
     });
   });
+
+  describe('object map listener', function () {
+    beforeEach(function () {
+      mockConnectComposerToStoreReturn1.listener = {};
+      mockConnectComposerToStoreReturn1.listener[mockEvent2] = [mockListener1, mockListener2];
+      mockConnectComposerToStoreReturn1.listener[mockEvent3] = mockListener3;
+
+      mockMixin = TuxStoreMixinGenerator(mockConnectComposerToStore1);
+    });
+
+    it('should add the listener values for the corresponding event keys', function () {
+      // addChangeListener should not have been called yet
+      expect(mockStore1.addChangeListener.mock.calls.length).toBe(0);
+
+      mockMixin.componentDidMount();
+
+      // addChangeListener should have been called once for each listener
+      expect(mockStore1.addChangeListener.mock.calls.length).toBe(3);
+
+      // first call of addChangeListener on mockStore1
+      expect(mockStore1.addChangeListener.mock.calls[0][0]).toBe(mockConnectComposerToStoreReturn1.listener[mockEvent2][0]);
+      expect(mockStore1.addChangeListener.mock.calls[0][1]).toBe(mockEvent2);
+
+      // second call of addChangeListener on mockStore1
+      expect(mockStore1.addChangeListener.mock.calls[1][0]).toBe(mockConnectComposerToStoreReturn1.listener[mockEvent2][1]);
+      expect(mockStore1.addChangeListener.mock.calls[1][1]).toBe(mockEvent2);
+
+      // third call of addChangeListener on mockStore1
+      expect(mockStore1.addChangeListener.mock.calls[2][0]).toBe(mockConnectComposerToStoreReturn1.listener[mockEvent3]);
+      expect(mockStore1.addChangeListener.mock.calls[2][1]).toBe(mockEvent3);
+    });
+
+    it('should remove the listener values for the corresponding event keys', function () {
+      // removeChangeListener should not have been called yet
+      expect(mockStore1.removeChangeListener.mock.calls.length).toBe(0);
+
+      mockMixin.componentDidMount();
+      mockMixin.componentWillUnmount();
+
+      // removeChangeListener should have been called once for each event
+      expect(mockStore1.removeChangeListener.mock.calls.length).toBe(3);
+
+      // first call of removeChangeListener on mockStore1
+      expect(mockStore1.removeChangeListener.mock.calls[0][0]).toBe(mockConnectComposerToStoreReturn1.listener[mockEvent2][0]);
+      expect(mockStore1.removeChangeListener.mock.calls[0][1]).toBe(mockEvent2);
+
+      // second call of removeChangeListener on mockStore1
+      expect(mockStore1.removeChangeListener.mock.calls[1][0]).toBe(mockConnectComposerToStoreReturn1.listener[mockEvent2][1]);
+      expect(mockStore1.removeChangeListener.mock.calls[1][1]).toBe(mockEvent2);
+
+      // third call of removeChangeListener on mockStore1
+      expect(mockStore1.removeChangeListener.mock.calls[2][0]).toBe(mockConnectComposerToStoreReturn1.listener[mockEvent3]);
+      expect(mockStore1.removeChangeListener.mock.calls[2][1]).toBe(mockEvent3);
+    });
+  });
 });
